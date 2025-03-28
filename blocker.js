@@ -11,7 +11,7 @@ function blockPosts(bannedUsers) {
       item.classList.add('eksi-blocker-blur');
       
       // Check if button already exists to prevent duplicates
-      if (!item.querySelector('.eksi-blocker-btn-container')) {
+      if (!item.querySelector('.eksi-blocker-show-btn')) {
         // Create show button
         const showButton = document.createElement('button');
         showButton.textContent = 'Göster';
@@ -63,6 +63,7 @@ function injectCSS() {
       filter: blur(8px);
       transition: filter 0.3s ease;
       position: relative;
+      pointer-events: auto;
     }
     
     .eksi-blocker-shown {
@@ -78,8 +79,8 @@ function injectCSS() {
       display: flex;
       justify-content: center;
       align-items: center;
-      z-index: 10000;
-      background-color: rgba(0, 0, 0, 0.1);
+      pointer-events: none;
+      z-index: 1000;
     }
     
     .eksi-blocker-shown .eksi-blocker-btn-container {
@@ -94,20 +95,15 @@ function injectCSS() {
       border-radius: 20px;
       font-size: 14px;
       cursor: pointer;
+      pointer-events: auto;
       transition: all 0.2s ease;
       box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
-      z-index: 10001;
-      pointer-events: all;
     }
     
     .eksi-blocker-show-btn:hover {
       background-color: rgba(0, 0, 0, 0.85);
       transform: scale(1.05);
       box-shadow: 0 3px 8px rgba(0, 0, 0, 0.25);
-    }
-    
-    li#entry-item {
-      overflow: visible !important;
     }
   `;
   document.head.appendChild(style);
@@ -132,31 +128,3 @@ browser.storage.onChanged.addListener((changes, area) => {
     blockPosts(changes.bannedUsers.newValue);
   }
 });
-
-// Setup mutation observer to detect new posts being added to the page
-const observeNewPosts = () => {
-  const targetNode = document.body;
-  const config = { childList: true, subtree: true };
-
-  const observer = new MutationObserver((mutationsList) => {
-    for (const mutation of mutationsList) {
-      if (mutation.type === 'childList' && mutation.addedNodes.length) {
-        // Get updated list and reapply
-        browser.storage.local.get('bannedUsers')
-          .then((result) => {
-            const bannedUsers = result.bannedUsers || [];
-            blockPosts(bannedUsers);
-          })
-          .catch((error) => {
-            console.error('Error loading banned users:', error);
-          });
-        break;
-      }
-    }
-  });
-
-  observer.observe(targetNode, config);
-};
-
-// Call the observer setup
-observeNewPosts();
