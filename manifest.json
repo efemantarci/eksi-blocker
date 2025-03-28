@@ -1,0 +1,33 @@
+{
+
+  "description": "Belli kullanıcıları engellemeye yarayan firefox eklentisi",
+  "manifest_version": 2,
+  "name": "Eksi Blocker",
+  "version": "1.0",
+  "icons": {
+    "48": "icons/beasts-48.png"
+  },
+
+
+  "browser_action": {
+    "default_icon": "icons/beasts-32.png",
+    "theme_icons": [{
+        "light": "icons/beasts-32-light.png",
+        "dark": "icons/beasts-32.png",
+        "size": 32
+    }],
+    "default_title": "Eksi Blocker",
+    "default_popup": "popup/blocker_popup.html"
+  },
+
+  "content_scripts": [
+    {
+      "matches": ["*://*.eksisozluk.com/*"],
+      "js": ["blocker.js"]
+    }
+  ],
+
+  "permissions": [
+    "storage"
+  ]
+}
