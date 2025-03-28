@@ -60,10 +60,16 @@ function injectCSS() {
   const style = document.createElement('style');
   style.textContent = `
     .eksi-blocker-blur {
-      filter: blur(8px);
-      transition: filter 0.3s ease;
       position: relative;
       pointer-events: auto;
+    }
+
+    .eksi-blocker-blur > *:not(.eksi-blocker-btn-container) {
+      filter: blur(8px);
+    }
+
+    .eksi-blocker-shown.eksi-blocker-blur > *:not(.eksi-blocker-btn-container) {
+      filter: none;
     }
     
     .eksi-blocker-shown {
@@ -80,15 +86,11 @@ function injectCSS() {
       justify-content: center;
       align-items: center;
       pointer-events: none;
-      z-index: 1000;
-    }
-    
-    .eksi-blocker-shown .eksi-blocker-btn-container {
-      background-color: rgba(0, 0, 0, 0.05);
+      z-index: 1001;
     }
     
     .eksi-blocker-show-btn {
-      background-color: rgba(0, 0, 0, 0.7);
+      background-color: rgb(35, 30, 30);
       color: white;
       border: none;
       padding: 8px 16px;
@@ -100,11 +102,17 @@ function injectCSS() {
       box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
     }
     
+    .eksi-blocker-show-btn:hover,
+    .eksi-blocker-show-btn:active,
+    .eksi-blocker-show-btn:focus  {
+      background-color: rgb(10, 10, 10);
+    }
+
     .eksi-blocker-show-btn:hover {
-      background-color: rgba(0, 0, 0, 0.85);
       transform: scale(1.05);
       box-shadow: 0 3px 8px rgba(0, 0, 0, 0.25);
     }
+
   `;
   document.head.appendChild(style);
 }
