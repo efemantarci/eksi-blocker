@@ -5,6 +5,38 @@ function blockPosts(bannedUsers) {
 
   // Loop through each item and filter blocked posts
   listItems.forEach(item => {
+    // Add block button
+    const feedbackBlock = item.querySelector(".feedback");
+    if (!feedbackBlock.querySelector(".block")) {
+    const blockButton = document.createElement("div");
+    blockButton.style.display = "inline-block";
+    blockButton.classList.add("block", "dropdown");
+
+    const actionList = document.createElement("ul");
+    actionList.classList.add("dropdown-menu", "right", "toggles-menu");
+    blockButton.appendChild(actionList);
+
+    const link = document.createElement("a");
+    
+    // Create and configure SVG element - using correct namespace
+    const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    
+    // Updated viewBox to match the path data's coordinate system
+    svg.classList.add("eksi-blocker-svg");
+    svg.setAttribute("viewBox", "0 0 206.559 206.559");
+    svg.style.display = "block"; // Ensure the SVG is displayed
+    
+    // Create path element with the SVG data
+    const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+    path.setAttribute("d", "M0,103.279c0,56.948,46.331,103.279,103.279,103.279s103.279-46.331,103.279-103.279S160.228,0,103.279,0S0,46.331,0,103.279z M170,103.279c0,36.79-29.931,66.721-66.721,66.721c-11.765,0-22.821-3.072-32.429-8.439L161.56,70.85C166.927,80.458,170,91.514,170,103.279z M103.279,36.559c11.765,0,22.821,3.072,32.429,8.439l-90.709,90.711c-5.368-9.608-8.44-20.664-8.44-32.43C36.559,66.489,66.489,36.559,103.279,36.559z");
+    
+    // Append path to SVG
+    svg.appendChild(path);
+    link.appendChild(svg);
+    blockButton.appendChild(link);
+    feedbackBlock.appendChild(blockButton);
+  }
+
     const nickname = item.getAttribute("data-author");
     if (bannedUsers.includes(nickname)) {
       // Add blur class
@@ -175,6 +207,22 @@ function injectCSS() {
     
     li#entry-item {
       overflow: visible !important;
+    }
+
+    .block {
+      display: inline-block;
+      vertical-align: top;
+    }
+
+    .eksi-blocker-svg {
+      fill: #333333 !important;
+      background-color: #F5F5F5;
+      background-position: right;
+      width: 28px;
+      height: 28px;
+      border-radius: 100px;
+      padding: 6px;
+      box-sizing: border-box;
     }
   `;
   document.head.appendChild(style);
