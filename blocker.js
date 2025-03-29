@@ -9,9 +9,8 @@ function blockPosts(bannedUsers) {
     if (bannedUsers.includes(nickname)) {
       // Add blur class
       item.classList.add('eksi-blocker-blur');
-      
       // Check if button already exists to prevent duplicates
-      if (!item.querySelector('.eksi-blocker-show-btn')) {
+      if (!item.querySelector('.eksi-blocker-btn-container')) {
         // Create show button
         const showButton = document.createElement('button');
         showButton.textContent = 'Göster';
@@ -34,22 +33,39 @@ function blockPosts(bannedUsers) {
           }
         });
         
-        // Create button container
+        // Create button container for central button
         const buttonContainer = document.createElement('div');
         buttonContainer.className = 'eksi-blocker-btn-container';
         buttonContainer.appendChild(showButton);
         
-        // Add button to item
+        // Create info text element at the bottom
+        const infoText = document.createElement("div");
+        infoText.className = 'eksi-blocker-info-text';
+        infoText.textContent = "Engellenen Kullanıcı: " + nickname;
+        
+        // Create info container for bottom placement
+        const infoContainer = document.createElement('div');
+        infoContainer.className = 'eksi-blocker-info-container';
+        infoContainer.appendChild(infoText);
+        
+        // Add both containers to item
         item.appendChild(buttonContainer);
+        item.appendChild(infoContainer);
       }
     } else {
       // If user is not in banned list, make sure we remove any previously applied blur
       item.classList.remove('eksi-blocker-blur', 'eksi-blocker-shown');
       
-      // Remove button if it exists
+      // Remove button and info if they exist
       const btnContainer = item.querySelector('.eksi-blocker-btn-container');
+      const infoContainer = item.querySelector('.eksi-blocker-info-container');
+      
       if (btnContainer) {
         btnContainer.remove();
+      }
+      
+      if (infoContainer) {
+        infoContainer.remove();
       }
     }
   });
@@ -64,11 +80,11 @@ function injectCSS() {
       pointer-events: auto;
     }
 
-    .eksi-blocker-blur > *:not(.eksi-blocker-btn-container) {
+    .eksi-blocker-blur > *:not(.eksi-blocker-btn-container):not(.eksi-blocker-info-container) {
       filter: blur(8px);
     }
 
-    .eksi-blocker-shown.eksi-blocker-blur > *:not(.eksi-blocker-btn-container) {
+    .eksi-blocker-shown.eksi-blocker-blur > *:not(.eksi-blocker-btn-container):not(.eksi-blocker-info-container) {
       filter: none;
     }
     
@@ -87,6 +103,28 @@ function injectCSS() {
       align-items: center;
       pointer-events: none;
       z-index: 1001;
+    }
+    
+    .eksi-blocker-info-container {
+      position: absolute;
+      bottom: 10px;
+      left: 0;
+      width: 100%;
+      display: flex;
+      justify-content: center;
+      pointer-events: none;
+      z-index: 1002;
+    }
+    
+    .eksi-blocker-info-text {
+      color: white;
+      background-color: rgba(35, 30, 30, 0.9);
+      padding: 6px 12px;
+      border-radius: 15px;
+      font-size: 12px;
+      pointer-events: none;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+      max-width: 80%;
     }
     
     .eksi-blocker-show-btn {
@@ -112,7 +150,10 @@ function injectCSS() {
       transform: scale(1.05);
       box-shadow: 0 3px 8px rgba(0, 0, 0, 0.25);
     }
-
+    
+    li#entry-item {
+      overflow: visible !important;
+    }
   `;
   document.head.appendChild(style);
 }
