@@ -26,10 +26,22 @@ function blockPosts(bannedUsers) {
             // Hide content again
             parent.classList.remove('eksi-blocker-shown');
             showButton.textContent = 'Göster';
+            showButton.classList.remove("eksi-blocker-transparent-btn");
+            // Force immediate style update
+            showButton.style.backgroundColor = "rgb(35, 30, 30)";
+            setTimeout(() => {
+              showButton.style.backgroundColor = "";
+            }, 50);
           } else {
             // Show content
             parent.classList.add('eksi-blocker-shown');
             showButton.textContent = 'Gizle';
+            showButton.classList.add("eksi-blocker-transparent-btn");
+            // Force immediate style update
+            showButton.style.backgroundColor = "rgba(10, 10, 10, 0.2)";
+            setTimeout(() => {
+              showButton.style.backgroundColor = "";
+            }, 50);
           }
         });
         
@@ -140,10 +152,20 @@ function injectCSS() {
       box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
     }
     
+    .eksi-blocker-transparent-btn {
+      background-color: rgba(10, 10, 10, 0.2) !important;
+    }
+    
     .eksi-blocker-show-btn:hover,
     .eksi-blocker-show-btn:active,
     .eksi-blocker-show-btn:focus  {
       background-color: rgb(10, 10, 10);
+    }
+
+    .eksi-blocker-transparent-btn:hover,
+    .eksi-blocker-transparent-btn:active,
+    .eksi-blocker-transparent-btn:focus {
+      background-color: rgba(10, 10, 10, 0.1) !important;
     }
 
     .eksi-blocker-show-btn:hover {
