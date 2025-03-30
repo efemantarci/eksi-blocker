@@ -5,15 +5,47 @@ function blockPosts(bannedUsers) {
 
   // Loop through each item and filter blocked posts
   listItems.forEach(item => {
+
+    const nickname = item.getAttribute("data-author");
+    
     // Add block button
     const feedbackBlock = item.querySelector(".feedback");
     if (!feedbackBlock.querySelector(".block")) {
     const blockButton = document.createElement("div");
     blockButton.style.display = "inline-block";
     blockButton.classList.add("block", "dropdown");
+    blockButton.onclick = function (e) {
+      e.stopPropagation();
+      const actionList = blockButton.querySelector(".dropdown-menu");
+      if (actionList) {
+        actionList.classList.toggle("open");
+      }
+    }
 
     const actionList = document.createElement("ul");
     actionList.classList.add("dropdown-menu", "right", "toggles-menu");
+    const blockUser = document.createElement("li");
+    const blockUserLink = document.createElement("a");
+    blockUser.classList.add("share-links");
+    blockUser.appendChild(blockUserLink);
+    actionList.appendChild(blockUser);
+    blockUserLink.textContent = "Kullanıcıyı Engelle";
+
+    blockUser.onclick = function(e){
+      e.stopPropagation();
+      
+      // Use the shared user manager function
+      userManager.addUserToBlockList(nickname)
+        .then(added => {
+          if (added) {
+            // Reload banned users and reapply blocking
+            userManager.getBannedUsers()
+              .then(bannedUsers => {
+                blockPosts(bannedUsers);
+              });
+          }
+        });
+    }
     blockButton.appendChild(actionList);
 
     const link = document.createElement("a");
@@ -32,12 +64,11 @@ function blockPosts(bannedUsers) {
     
     // Append path to SVG
     svg.appendChild(path);
+    
     link.appendChild(svg);
     blockButton.appendChild(link);
     feedbackBlock.appendChild(blockButton);
   }
-
-    const nickname = item.getAttribute("data-author");
     if (bannedUsers.includes(nickname)) {
       // Add blur class
       item.classList.add('eksi-blocker-blur');
@@ -232,9 +263,8 @@ function injectCSS() {
 injectCSS();
 
 // Get banned users from storage and apply blocking
-browser.storage.local.get('bannedUsers')
-  .then((result) => {
-    const bannedUsers = result.bannedUsers || [];
+userManager.getBannedUsers()
+  .then(bannedUsers => {
     blockPosts(bannedUsers);
   })
   .catch((error) => {

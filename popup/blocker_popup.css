@@ -23,25 +23,48 @@ html, body {
   margin-bottom: 15px;
 }
 
+.popup-container {
+  width: 300px;
+  padding: 15px;
+  font-family: Arial, sans-serif;
+}
+
+h2 {
+  margin-top: 0;
+  border-bottom: 1px solid #ccc;
+  padding-bottom: 10px;
+}
+
+h3 {
+  font-size: 16px;
+  margin-top: 15px;
+  margin-bottom: 10px;
+}
+
+.add-user-section {
+  display: flex;
+  margin-bottom: 15px;
+}
+
 #user-input {
   flex-grow: 1;
-  padding: 6px;
+  padding: 8px;
   border: 1px solid #ccc;
-  border-radius: 3px;
-  margin-right: 5px;
+  border-radius: 4px;
+  margin-right: 10px;
 }
 
 #add-button {
-  background-color: #0060df;
-  border: none;
+  background-color: #4CAF50;
   color: white;
-  padding: 6px 12px;
-  border-radius: 3px;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 4px;
   cursor: pointer;
 }
 
 #add-button:hover {
-  background-color: #003eaa;
+  background-color: #45a049;
 }
 
 .blocked-list-container {
@@ -51,29 +74,30 @@ html, body {
 #blocked-users-list {
   list-style: none;
   padding: 0;
-  max-height: 150px;
+  margin: 0;
+  max-height: 300px;
   overflow-y: auto;
-  margin-bottom: 15px;
 }
 
 .blocked-user {
   display: flex;
   justify-content: space-between;
-  padding: 6px 0;
+  align-items: center;
+  padding: 8px;
   border-bottom: 1px solid #eee;
 }
 
 .remove-button {
-  background-color: #d70022;
-  border: none;
+  background-color: #f44336;
   color: white;
-  padding: 2px 6px;
+  border: none;
+  padding: 5px 8px;
   border-radius: 3px;
   cursor: pointer;
 }
 
 .remove-button:hover {
-  background-color: #a4000f;
+  background-color: #d32f2f;
 }
 
 .info-panel {

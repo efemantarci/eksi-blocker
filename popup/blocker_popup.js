@@ -1,12 +1,8 @@
 // Function to load and display banned users
 function loadBannedUsers() {
-  browser.storage.local.get('bannedUsers')
-    .then((result) => {
-      const bannedUsers = result.bannedUsers || [];
+  userManager.getBannedUsers()
+    .then(bannedUsers => {
       displayBannedUsers(bannedUsers);
-    })
-    .catch((error) => {
-      console.error('Error loading banned users:', error);
     });
 }
 
@@ -39,32 +35,22 @@ function addUser(user) {
     return; // Don't add empty usernames
   }
   
-  browser.storage.local.get('bannedUsers')
-    .then((result) => {
-      const bannedUsers = result.bannedUsers || [];
-      
-      if (!bannedUsers.includes(user)) {
-        bannedUsers.push(user);
-        browser.storage.local.set({ bannedUsers })
-          .then(() => {
-            loadBannedUsers();
-            document.getElementById('user-input').value = '';
-          });
+  userManager.addUserToBlockList(user)
+    .then(added => {
+      if (added) {
+        loadBannedUsers();
+        document.getElementById('user-input').value = '';
       }
     });
 }
 
 // Function to remove a user from the banned list
 function removeUser(user) {
-  browser.storage.local.get('bannedUsers')
-    .then((result) => {
-      const bannedUsers = result.bannedUsers || [];
-      const updatedList = bannedUsers.filter(u => u !== user);
-      
-      browser.storage.local.set({ bannedUsers: updatedList })
-        .then(() => {
-          loadBannedUsers();
-        });
+  userManager.removeUserFromBlockList(user)
+    .then(removed => {
+      if (removed) {
+        loadBannedUsers();
+      }
     });
 }
 
