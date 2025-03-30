@@ -1,16 +1,40 @@
-// Function to block posts from banned users
-function blockPosts(bannedUsers) {
-  // Select all <li> elements with the id "entry-item"
-  const listItems = document.querySelectorAll('li#entry-item');
+let blockedUsers = [];
 
-  // Loop through each item and filter blocked posts
-  listItems.forEach(item => {
+const BLOCK_MESSAGE = "Kullanıcıyı Engelle";
+const UNBLOCK_MESSAGE = "Engeli Kaldır";
 
-    const nickname = item.getAttribute("data-author");
-    
-    // Add block button
-    const feedbackBlock = item.querySelector(".feedback");
-    if (!feedbackBlock.querySelector(".block")) {
+function blockButtonClick(event, nickname, blockUserLink) {
+  event.stopPropagation();
+  
+  if (blockedUsers.includes(nickname)) {
+    // Remove from block list
+    userManager.removeUserFromBlockList(nickname)
+      .then(removed => {
+        if (removed) {
+          blockUserLink.textContent = BLOCK_MESSAGE;
+        }
+      });
+  } else {
+    // Add to block list
+    userManager.addUserToBlockList(nickname)
+      .then(added => {
+        if (added) {
+          blockUserLink.textContent = UNBLOCK_MESSAGE;
+        }
+      });
+  }
+
+  // Close the dropdown menu
+  const parent = blockUserLink.closest('.dropdown-menu');
+  if (parent) {
+    parent.classList.remove('open');
+  }
+}
+
+function addBlockButton(postContainer, nickname) {
+  // Add block button
+  const feedbackBlock = postContainer.querySelector(".feedback");
+  if (!feedbackBlock.querySelector(".block")) {
     const blockButton = document.createElement("div");
     blockButton.style.display = "inline-block";
     blockButton.classList.add("block", "dropdown");
@@ -29,62 +53,64 @@ function blockPosts(bannedUsers) {
     blockUser.classList.add("share-links");
     blockUser.appendChild(blockUserLink);
     actionList.appendChild(blockUser);
-    blockUserLink.textContent = "Kullanıcıyı Engelle";
-
-    blockUser.onclick = function(e){
-      e.stopPropagation();
-      
-      // Use the shared user manager function
-      userManager.addUserToBlockList(nickname)
-        .then(added => {
-          if (added) {
-            // Reload banned users and reapply blocking
-            userManager.getBannedUsers()
-              .then(bannedUsers => {
-                blockPosts(bannedUsers);
-              });
-          }
-        });
-    }
-    blockButton.appendChild(actionList);
-
-    const link = document.createElement("a");
     
+    // Set text based on current blocked status - using global blockedUsers
+    blockUserLink.textContent = blockedUsers.includes(nickname) ? UNBLOCK_MESSAGE : BLOCK_MESSAGE;
+
+    blockUser.onclick = (e) => blockButtonClick(e, nickname, blockUserLink);
+    blockButton.appendChild(actionList);
+    const link = document.createElement("a");
+
     // Create and configure SVG element - using correct namespace
     const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-    
+
     // Updated viewBox to match the path data's coordinate system
     svg.classList.add("eksi-blocker-svg");
     svg.setAttribute("viewBox", "0 0 206.559 206.559");
     svg.style.display = "block"; // Ensure the SVG is displayed
-    
+
     // Create path element with the SVG data
     const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
     path.setAttribute("d", "M0,103.279c0,56.948,46.331,103.279,103.279,103.279s103.279-46.331,103.279-103.279S160.228,0,103.279,0S0,46.331,0,103.279z M170,103.279c0,36.79-29.931,66.721-66.721,66.721c-11.765,0-22.821-3.072-32.429-8.439L161.56,70.85C166.927,80.458,170,91.514,170,103.279z M103.279,36.559c11.765,0,22.821,3.072,32.429,8.439l-90.709,90.711c-5.368-9.608-8.44-20.664-8.44-32.43C36.559,66.489,66.489,36.559,103.279,36.559z");
-    
+
     // Append path to SVG
     svg.appendChild(path);
-    
+
     link.appendChild(svg);
     blockButton.appendChild(link);
     feedbackBlock.appendChild(blockButton);
   }
-    if (bannedUsers.includes(nickname)) {
+}
+
+// Function to block posts from banned users
+function blockPosts(bannedUsers) {
+  // Update the global variable
+  blockedUsers = bannedUsers || [];
+  
+  // Select all <li> elements with the id "entry-item"
+  const listItems = document.querySelectorAll('li#entry-item');
+
+  listItems.forEach(item => {
+    const nickname = item.getAttribute("data-author");
+    
+    addBlockButton(item, nickname);
+    
+    if (blockedUsers.includes(nickname)) {
       // Add blur class
       item.classList.add('eksi-blocker-blur');
-      // Check if button already exists to prevent duplicates
+      // Prevent duplicates
       if (!item.querySelector('.eksi-blocker-btn-container')) {
         // Create show button
         const showButton = document.createElement('button');
         showButton.textContent = 'Göster';
         showButton.className = 'eksi-blocker-show-btn';
-        
+
         showButton.addEventListener('click', (e) => {
           e.preventDefault();
           e.stopPropagation();
-          
+
           const parent = e.target.closest('li#entry-item');
-          
+
           if (parent.classList.contains('eksi-blocker-shown')) {
             // Hide content again
             parent.classList.remove('eksi-blocker-shown');
@@ -107,22 +133,22 @@ function blockPosts(bannedUsers) {
             }, 50);
           }
         });
-        
+
         // Create button container for central button
         const buttonContainer = document.createElement('div');
         buttonContainer.className = 'eksi-blocker-btn-container';
         buttonContainer.appendChild(showButton);
-        
+
         // Create info text element at the bottom
         const infoText = document.createElement("div");
         infoText.className = 'eksi-blocker-info-text';
         infoText.textContent = "Engellenen Kullanıcı: " + nickname;
-        
+
         // Create info container for bottom placement
         const infoContainer = document.createElement('div');
         infoContainer.className = 'eksi-blocker-info-container';
         infoContainer.appendChild(infoText);
-        
+
         // Add both containers to item
         item.appendChild(buttonContainer);
         item.appendChild(infoContainer);
@@ -130,15 +156,15 @@ function blockPosts(bannedUsers) {
     } else {
       // If user is not in banned list, make sure we remove any previously applied blur
       item.classList.remove('eksi-blocker-blur', 'eksi-blocker-shown');
-      
+
       // Remove button and info if they exist
       const btnContainer = item.querySelector('.eksi-blocker-btn-container');
       const infoContainer = item.querySelector('.eksi-blocker-info-container');
-      
+
       if (btnContainer) {
         btnContainer.remove();
       }
-      
+
       if (infoContainer) {
         infoContainer.remove();
       }
@@ -263,9 +289,9 @@ function injectCSS() {
 injectCSS();
 
 // Get banned users from storage and apply blocking
-userManager.getBannedUsers()
-  .then(bannedUsers => {
-    blockPosts(bannedUsers);
+browser.storage.local.get('bannedUsers')
+  .then((result) => {
+    blockPosts(result.bannedUsers || []);
   })
   .catch((error) => {
     console.error('Error loading banned users:', error);
