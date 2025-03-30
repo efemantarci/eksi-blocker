@@ -1,10 +1,12 @@
 <!DOCTYPE html>
 <html>
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="stylesheet" href="blocker_popup.css">
 </head>
+
 <body>
   <div class="popup-container">
     <div class="header-container">
@@ -14,6 +16,9 @@
     <div class="add-user-section">
       <input type="text" id="user-input" placeholder="Kullanıcı adını girin...">
       <button id="add-button">Ekle</button>
+    </div>
+    <div class="actions-section">
+      <button id="import-button" class="action-button">JSON'dan İçe Aktar</button>
     </div>
     <div class="user-list-section">
       <h3>Engellenen Kullanıcılar</h3>
@@ -25,4 +30,5 @@
   <script src="../utils/user_manager.js"></script>
   <script src="blocker_popup.js"></script>
 </body>
+
 </html>

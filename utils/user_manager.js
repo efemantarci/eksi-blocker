@@ -51,11 +51,49 @@ async function removeUserFromBlockList(username) {
   }
 }
 
+// Add multiple users to the banned list at once
+async function importUsersToBlockList(usernames) {
+  if (!usernames || !Array.isArray(usernames) || usernames.length === 0) {
+    return { success: false, message: "No valid usernames to import" };
+  }
+  
+  try {
+    const bannedUsers = await getBannedUsers();
+    let importCount = 0;
+    
+    // Filter out duplicates and empty usernames
+    const validUsernames = usernames.filter(username => 
+      username && 
+      username.trim() && 
+      !bannedUsers.includes(username)
+    );
+    
+    if (validUsernames.length === 0) {
+      return { success: false, message: "Tüm kullanıcılar zaten engel listesinde" };
+    }
+    
+    // Add new users to the banned list
+    const updatedList = [...bannedUsers, ...validUsernames];
+    await browser.storage.local.set({ bannedUsers: updatedList });
+    
+    console.log(`${validUsernames.length} kullanıcı engellendi`);
+    return { 
+      success: true, 
+      message: `${validUsernames.length} kullanıcı başarıyla engellendi`,
+      importedCount: validUsernames.length
+    };
+  } catch (error) {
+    console.error('Error importing users to block list:', error);
+    return { success: false, message: "Kullanıcıları içe aktarırken bir hata oluştu" };
+  }
+}
+
 // Export the functions for use in other scripts
 const userManager = {
   getBannedUsers,
   addUserToBlockList,
-  removeUserFromBlockList
+  removeUserFromBlockList,
+  importUsersToBlockList
 };
 
 // Make sure userManager is available in the global scope

@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ekşi Blocker - JSON Import</title>
+    <link rel="stylesheet" href="import_page.css">
+</head>
+
+<body>
+    <div class="container">
+        <div class="header">
+            <img src="../icons/logo.png" alt="Ekşi Blocker Logo" class="logo">
+            <h1>Ekşi Blocker - JSON Import</h1>
+        </div>
+
+        <div class="import-section">
+            <div class="info-box">
+                <h2>Kullanıcı Listesi İçe Aktar</h2>
+                <p>JSON dosyanızı yükleyin. JSON dosyası aşağıdaki formatta olmalıdır:</p>
+<pre class="code-example">
+{
+    "usernames": ["kullanici1", "kullanici2", "kullanici3"]
+}</pre>
+            </div>
+            <div class="file-upload">
+                <input type="file" id="file-input" accept=".json" class="file-input">
+                <label for="file-input" class="file-label">
+                    <span>JSON Dosyası Seçin</span>
+                </label>
+                <div id="file-name" class="file-name"></div>
+            </div>
+
+            <div class="button-container">
+                <button id="import-button" class="primary-button" disabled>İçe Aktar</button>
+                <button id="cancel-button" class="secondary-button">İptal</button>
+            </div>
+
+            <div id="status-message" class="status-message"></div>
+        </div>
+
+        <div id="result-section" class="result-section hidden">
+            <h3>İçe Aktarma Sonucu</h3>
+            <div id="import-summary" class="import-summary"></div>
+            <button id="back-button" class="primary-button">Ana Sayfaya Dön</button>
+        </div>
+    </div>
+
+    <script src="../utils/user_manager.js"></script>
+    <script src="import_page.js"></script>
+</body>
+
+</html>

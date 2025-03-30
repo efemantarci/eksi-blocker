@@ -54,6 +54,73 @@ function removeUser(user) {
     });
 }
 
+// Function to handle JSON file import
+function handleFileImport(event) {
+  const file = event.target.files[0];
+  if (!file) {
+    return;
+  }
+
+  // Show loading status
+  showStatus('Dosya yükleniyor...', 'info');
+
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      const jsonData = JSON.parse(e.target.result);
+      
+      // Check if the JSON has a usernames array
+      if (Array.isArray(jsonData)) {
+        importUsers(jsonData);
+      } else if (jsonData.usernames && Array.isArray(jsonData.usernames)) {
+        importUsers(jsonData.usernames);
+      } else {
+        showStatus('JSON dosyası geçerli bir kullanıcı listesi içermiyor.', 'error');
+      }
+    } catch (error) {
+      showStatus('JSON dosyası ayrıştırılırken hata oluştu: ' + error.message, 'error');
+    }
+  };
+  reader.onerror = function() {
+    showStatus('Dosya okunamadı.', 'error');
+  };
+  reader.readAsText(file);
+  
+  // Reset the file input so the same file can be selected again
+  event.target.value = '';
+}
+
+// Function to import users from a JSON array
+function importUsers(usernames) {
+  userManager.importUsersToBlockList(usernames)
+    .then(result => {
+      if (result.success) {
+        showStatus(result.message, 'success');
+        loadBannedUsers(); // Refresh the list
+      } else {
+        showStatus(result.message, 'error');
+      }
+    })
+    .catch(error => {
+      showStatus('İçe aktarma sırasında hata oluştu: ' + error.message, 'error');
+    });
+}
+
+// Function to display status messages - adding 'info' type
+function showStatus(message, type) {
+  const statusElement = document.getElementById('import-status');
+  statusElement.textContent = message;
+  statusElement.className = 'status-message ' + type;
+  statusElement.style.display = 'block';
+  
+  // Auto-hide the message after 5 seconds if not loading info
+  if (type !== 'info') {
+    setTimeout(() => {
+      statusElement.style.display = 'none';
+    }, 5000);
+  }
+}
+
 // Event listeners
 document.addEventListener('DOMContentLoaded', () => {
   // Load banned users when popup opens
@@ -71,5 +138,11 @@ document.addEventListener('DOMContentLoaded', () => {
       const userInput = document.getElementById('user-input').value.trim();
       addUser(userInput);
     }
+  });
+  
+  // Import button opens the import page in a new tab
+  document.getElementById('import-button').addEventListener('click', () => {
+    browser.tabs.create({ url: "/import/import_page.html" });
+    window.close(); // Close the popup
   });
 });
