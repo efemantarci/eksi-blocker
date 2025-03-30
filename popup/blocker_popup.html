@@ -2,11 +2,15 @@
 <html>
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="stylesheet" href="blocker_popup.css">
 </head>
 <body>
   <div class="popup-container">
-    <h2>Ekşi Blocker</h2>
+    <div class="header-container">
+      <img src="../icons/logo.png" alt="Ekşi Blocker Logo" class="header-logo">
+      <h2>Ekşi Blocker</h2>
+    </div>
     <div class="add-user-section">
       <input type="text" id="user-input" placeholder="Kullanıcı adını girin...">
       <button id="add-button">Ekle</button>
@@ -18,7 +22,6 @@
       </ul>
     </div>
   </div>
-  <!-- Important: Load the user_manager.js script before the popup script -->
   <script src="../utils/user_manager.js"></script>
   <script src="blocker_popup.js"></script>
 </body>

@@ -1,7 +1,4 @@
-/**
- * User management utility functions for the blocker extension
- * Centralizes all banned user operations for consistency across components
- */
+// User management utility functions for the blocker extension
 
 // Get the current list of banned users
 async function getBannedUsers() {
@@ -55,7 +52,6 @@ async function removeUserFromBlockList(username) {
 }
 
 // Export the functions for use in other scripts
-// These will be available as userManager.functionName
 const userManager = {
   getBannedUsers,
   addUserToBlockList,
@@ -63,7 +59,6 @@ const userManager = {
 };
 
 // Make sure userManager is available in the global scope
-// This ensures it works both in content scripts and popup
 if (typeof window !== 'undefined') {
   window.userManager = userManager;
 }

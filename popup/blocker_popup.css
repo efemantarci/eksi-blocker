@@ -1,6 +1,13 @@
 html, body {
   width: 300px;
   font-family: Arial, sans-serif;
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+* {
+  box-sizing: border-box;
 }
 
 .panel {
@@ -24,15 +31,32 @@ html, body {
 }
 
 .popup-container {
-  width: 300px;
-  padding: 15px;
+  width: 100%;
+  max-width: 300px;
+  padding: 10px;
   font-family: Arial, sans-serif;
+  box-sizing: border-box;
+  overflow-x: hidden;
+}
+
+.header-container {
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.header-logo {
+  width: 24px;
+  height: 24px;
+  margin-right: 10px;
 }
 
 h2 {
   margin-top: 0;
+  margin-bottom: 0;
   border-bottom: 1px solid #ccc;
   padding-bottom: 10px;
+  flex-grow: 1;
 }
 
 h3 {
@@ -44,10 +68,12 @@ h3 {
 .add-user-section {
   display: flex;
   margin-bottom: 15px;
+  width: 100%;
 }
 
 #user-input {
   flex-grow: 1;
+  min-width: 0; /* Prevents flex items from overflowing */
   padding: 8px;
   border: 1px solid #ccc;
   border-radius: 4px;
@@ -85,6 +111,15 @@ h3 {
   align-items: center;
   padding: 8px;
   border-bottom: 1px solid #eee;
+  width: 100%;
+  overflow-wrap: break-word;
+}
+
+.blocked-user span {
+  flex-grow: 1;
+  margin-right: 8px;
+  overflow-wrap: break-word;
+  word-break: break-word;
 }
 
 .remove-button {
