@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ekşi Blocker - JSON Export</title>
+    <link rel="stylesheet" href="export_page.css">
+</head>
+
+<body>
+    <div class="container">
+        <div class="header">
+            <img src="../icons/logo.png" alt="Ekşi Blocker Logo" class="logo">
+            <h1>Ekşi Blocker - JSON Export</h1>
+        </div>
+
+        <div class="export-section">
+            <div class="info-box">
+                <h2>Kullanıcı Listesi Dışa Aktar</h2>
+                <p>Engellenen kullanıcı listesini JSON dosyası olarak dışa aktarın. Bu dosyayı yedeklemek veya başka bir tarayıcıda içe aktarmak için kullanabilirsiniz.</p>
+            </div>
+
+            <div class="export-options">
+                <div class="form-group">
+                    <label for="export-title">Liste Adı (isteğe bağlı):</label>
+                    <input type="text" id="export-title" placeholder="Eksi Blocker Export" class="text-input">
+                </div>
+                
+                <div class="stats-box">
+                    <p>Engellenen Kullanıcı Sayısı: <span id="user-count">Yükleniyor...</span></p>
+                </div>
+            </div>
+
+            <div class="button-container">
+                <button id="export-button" class="primary-button">JSON Olarak Dışa Aktar</button>
+                <button id="cancel-button" class="secondary-button">İptal</button>
+            </div>
+
+            <div id="status-message" class="status-message"></div>
+        </div>
+
+        <div id="result-section" class="result-section hidden">
+            <h3>Dışa Aktarma Sonucu</h3>
+            <div id="export-summary" class="export-summary"></div>
+            <div class="preview-box">
+                <h4>Önizleme:</h4>
+                <pre id="json-preview" class="code-example"></pre>
+            </div>
+            <button id="back-button" class="primary-button">Ana Sayfaya Dön</button>
+        </div>
+    </div>
+
+    <script src="../utils/user_manager.js"></script>
+    <script src="export_page.js"></script>
+</body>
+
+</html>

@@ -140,9 +140,14 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
   
-  // Import button opens the import page in a new tab
+  // Import/Export buttons for the new tab
   document.getElementById('import-button').addEventListener('click', () => {
     browser.tabs.create({ url: "/import/import_page.html" });
+    window.close(); // Close the popup
+  });
+
+  document.getElementById('export-button').addEventListener('click', () => {
+    browser.tabs.create({ url: "/export/export_page.html" });
     window.close(); // Close the popup
   });
 });

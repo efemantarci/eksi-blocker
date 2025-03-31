@@ -88,12 +88,39 @@ async function importUsersToBlockList(usernames) {
   }
 }
 
+// Export the list of banned users as a JSON object
+async function exportBlockList(title = "Eksi Blocker Export") {
+  try {
+    const bannedUsers = await getBannedUsers();
+    
+    // Create JSON structure
+    const exportData = {
+      title: title,
+      usernames: bannedUsers,
+      exportDate: new Date().toISOString(),
+      count: bannedUsers.length
+    };
+    
+    return {
+      success: true,
+      data: exportData
+    };
+  } catch (error) {
+    console.error('Error exporting block list:', error);
+    return {
+      success: false,
+      message: "Engellenen kullanıcı listesi dışa aktarılırken bir hata oluştu"
+    };
+  }
+}
+
 // Export the functions for use in other scripts
 const userManager = {
   getBannedUsers,
   addUserToBlockList,
   removeUserFromBlockList,
-  importUsersToBlockList
+  importUsersToBlockList,
+  exportBlockList
 };
 
 // Make sure userManager is available in the global scope

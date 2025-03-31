@@ -20,8 +20,8 @@ fileInput.addEventListener('change', (event) => {
     return;
   }
   
-  // Display the selected file name
-  fileNameDisplay.textContent = selectedFile.name;
+  const fileName = selectedFile.name;
+  fileNameDisplay.textContent = fileName;
   
   // Validate file type
   if (!selectedFile.name.toLowerCase().endsWith('.json')) {
@@ -45,6 +45,10 @@ fileInput.addEventListener('change', (event) => {
       } else {
         showStatus('Geçersiz JSON formatı. Lütfen doğru formatta bir dosya seçin.', 'error');
         importButton.disabled = true;
+      }
+
+      if(parsedData && parsedData.title) {
+        fileNameDisplay.textContent = `${fileName} (${parsedData.title})`;
       }
     } catch (error) {
       showStatus(`JSON ayrıştırma hatası: ${error.message}`, 'error');
@@ -77,7 +81,7 @@ importButton.addEventListener('click', async () => {
     if (result.success) {
       // Show success message
       showStatus(result.message, 'success');
-      
+      const usersToImport = parsedData.usernames;
       // Show summary and result section
       importSummary.innerHTML = `
         <p><strong>İşlem tamamlandı!</strong></p>

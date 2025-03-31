@@ -9,6 +9,7 @@ A Firefox extension that allows you to block posts from specific users on eksiso
 - Customize your block list through an easy-to-use interface
 - Blocked users are saved between browser sessions
 - Import multiple users at once from a JSON file
+- Export your block list to a JSON file for backup or sharing
 
 ## Usage
 
@@ -39,6 +40,25 @@ You can import multiple users at once with a JSON file:
 4. Click "JSON Dosyası Seçin" (Select JSON File) and choose your file
 5. After validation, click "İçe Aktar" (Import) button
 6. Users will be added to your block list
+
+### Exporting Users to JSON
+
+You can export your block list to a JSON file:
+
+1. Click "JSON Olarak Dışa Aktar" (Export as JSON) button in the popup
+2. A new tab will open with the export interface
+3. Optionally enter a title for your export
+4. Click "JSON Olarak Dışa Aktar" button
+5. The file will be downloaded automatically in this format:
+   ```json
+   {
+     "title": "Your Export Title",
+     "usernames": ["username1", "username2", "username3"],
+     "exportDate": "2023-01-01T12:00:00.000Z",
+     "count": 3
+   }
+   ```
+6. You can use this file to backup your list or import to another browser
 
 ## Installation
 

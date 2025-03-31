@@ -2,6 +2,7 @@ let blockedUsers = [];
 
 const BLOCK_MESSAGE = "Kullanıcıyı Engelle";
 const UNBLOCK_MESSAGE = "Engeli Kaldır";
+const loggedIn = document.querySelector(".loggedoff") == null;
 
 function blockButtonClick(event, nickname, blockUserLink) {
   event.stopPropagation();
