@@ -1,5 +1,5 @@
 // User management utility functions for the blocker extension
-  
+
 // Get the current list of banned users
 async function getBannedUsers() {
   try {
@@ -23,7 +23,7 @@ async function addUserToBlockList(username) {
     // Only add if not already in list
     if (!bannedUsers.includes(username)) {
       bannedUsers.push(username);
-      await browser.storage.local.set({ bannedUsers });
+      await browser.storage.local.set({ "bannedUsers" : bannedUsers });
       console.log("Kullanıcı engellendi: " + username);
       return true;
     } else {
@@ -33,6 +33,17 @@ async function addUserToBlockList(username) {
   } catch (error) {
     console.error('Error adding user to block list:', error);
     return false;
+  }
+}
+
+// Get the current list of banned users
+async function getFavBlockedEntries() {
+  try {
+    const result = await browser.storage.local.get('favBlockedEntries');
+    return result.favBlockedEntries || [];
+  } catch (error) {
+    console.error('Error loading fav blocked entries:', error);
+    return [];
   }
 }
 
@@ -47,6 +58,44 @@ async function removeUserFromBlockList(username) {
     return true;
   } catch (error) {
     console.error('Error removing user from block list:', error);
+    return false;
+  }
+}
+
+// Add a user to the banned list
+async function addEntryToFavBlockList(entry_id) {
+  if(!entry_id || !entry_id.trim()){
+    return false;
+  }
+  
+  try {
+    const favBlockedEntries = await getFavBlockedEntries();
+    
+    // Only add if not already in list
+    if (!favBlockedEntries.includes(entry_id)) {
+      favBlockedEntries.push(entry_id);
+      await browser.storage.local.set({ "favBlockedEntries" : favBlockedEntries });
+      console.log(`${entry_id} idli entry'yi favlayanlar engellendi`);
+      return true;
+    } else {
+      console.log(`${entry_id} idli entry'yi favlayanlar zaten engellendi`);
+      return false;
+    }
+  } catch (error) {
+    console.error(`${entry_id} idli entry'yi favlayanlar engellenerken hata oluştu: `, error);
+    return false;
+  }
+}
+
+async function removeEntryFromFavBlockList(entry_id) {
+  try {
+    const favBlockedEntries = await getFavBlockedEntries();
+    const updatedList = favBlockedEntries.filter(entry => entry !== entry_id);
+    await browser.storage.local.set({ favBlockedEntries: updatedList });
+    console.log(`${entry_id} idli entry'nin favlayanlar engellenmesi kaldırıldı`);
+    return true;
+  } catch (error) {
+    console.error('Error removing entry from fav block list:', error);
     return false;
   }
 }
@@ -132,14 +181,48 @@ async function batchAddUsersToBlockList(usernames) {
   }
 }
 
+async function batchRemoveUsersFromBlockList(usernames){
+  if (!usernames || !Array.isArray(usernames) || usernames.length === 0) {
+    return { success: false, message: "No usernames to remove", removedCount: 0 };
+  }
+  try {
+    const bannedUsers = await getBannedUsers();
+    const usersToRemove = usernames.filter(username => 
+      username && 
+      username.trim() && 
+      bannedUsers.includes(username)
+    );
+    // Remove users from the banned list
+    const updatedList = bannedUsers.filter(user => !usersToRemove.includes(user));
+    await browser.storage.local.set({ bannedUsers: updatedList });
+    return { 
+      success: true, 
+      message: `${usersToRemove.length} kullanıcı başarıyla engel listesinden kaldırıldı`,
+      removedCount: usersToRemove.length,
+      removedUsers: usersToRemove
+    };
+  } catch (error) {
+    console.error('Error removing users from block list:', error);
+    return { 
+      success: false, 
+      message: "Engellenen kullacıları kaldırırken bir hata oluştu",
+      removedCount: 0
+    };
+  }
+}
+
 // Export the functions for use in other scripts
 const userManager = {
   getBannedUsers,
   addUserToBlockList,
+  getFavBlockedEntries,
+  addEntryToFavBlockList,
+  removeEntryFromFavBlockList,
   removeUserFromBlockList,
   importUsersToBlockList,
   exportBlockList,
-  batchAddUsersToBlockList
+  batchAddUsersToBlockList,
+  batchRemoveUsersFromBlockList
 };
 
 // Make sure userManager is available in the global scope

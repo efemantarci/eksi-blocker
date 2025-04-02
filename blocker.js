@@ -1,9 +1,10 @@
 let blockedUsers = [];
+let favBlockedEntries = [];
 
 const BLOCK_MESSAGE = "Kullanıcıyı Engelle";
 const UNBLOCK_MESSAGE = "Engeli Kaldır";
 const FAVLAR_BLOCK_MESSAGE = "Favlayanları Engelle";
-const FAVLAR_UNBLOCK_MESSAGE = "Favlayanları Kaldır";
+const FAVLAR_UNBLOCK_MESSAGE = "Favlayanları Engellemeyi Kaldır";
 const BLOCKER_ID = "eksi-blocker-block-user";
 const BLOCKER_FAVLAR_ID = "eksi-blocker-block-favlayanlar";
 const loggedIn = document.querySelector(".loggedoff") == null;
@@ -77,6 +78,7 @@ function favlarButtonClick(event, entry_id, blockUserLink) {
   event.stopPropagation();
 
   // Show processing status
+  const isBlocked = favBlockedEntries.includes(entry_id);
   const originalText = blockUserLink.textContent;
   blockUserLink.textContent = "İşleniyor...";
 
@@ -96,7 +98,12 @@ function favlarButtonClick(event, entry_id, blockUserLink) {
       return parseFavlayanlar(html);
     })
     .then(favlayanlarArray => {
-      return userManager.batchAddUsersToBlockList(favlayanlarArray);
+      if(isBlocked) {
+        return userManager.batchRemoveUsersFromBlockList(favlayanlarArray);
+      }
+      else{
+        return userManager.batchAddUsersToBlockList(favlayanlarArray);
+      }
     })
     .then(result => {
       // Get the updated list of blocked users
@@ -108,21 +115,40 @@ function favlarButtonClick(event, entry_id, blockUserLink) {
       });
     })
     .then(({ batchResult, storageResult }) => {
-      // Update global array
       blockedUsers = storageResult.bannedUsers || [];
-
-      // Show message
-      if (batchResult.addedCount > 0) {
-        blockUserLink.textContent = FAVLAR_UNBLOCK_MESSAGE;
-        console.log(`Başarıyla ${batchResult.addedCount} kullanıcı engellendi`);
-      } else {
-        blockUserLink.textContent = "Tümü Zaten Engelli";
-        setTimeout(() => {
-          blockUserLink.textContent = originalText;
-        }, 2000);
+      if(!isBlocked){
+        // Show message
+        if (batchResult.addedCount > 0) {
+          blockUserLink.textContent = FAVLAR_UNBLOCK_MESSAGE;
+          console.log(`Başarıyla ${batchResult.addedCount} kullanıcı engellendi`);
+        } else {  
+          blockUserLink.textContent = "Tümü Zaten Engelli";
+          setTimeout(() => {
+            blockUserLink.textContent = originalText;
+          }, 2000);
+        }
       }
-      // Re-apply blocking to update UI
-      blockPosts(blockedUsers);
+      else{
+        if (batchResult.removedCount > 0) {
+          blockUserLink.textContent = FAVLAR_BLOCK_MESSAGE;
+          console.log(`Başarıyla ${batchResult.removedCount} kullanıcının engeli kaldırıldı`);
+        } else {
+          blockUserLink.textContent = "Hiçbiri Engelli Değil";
+          console.log(batchResult);
+          console.log(storageResult);
+          setTimeout(() => {
+            blockUserLink.textContent = originalText;
+          }, 2000);
+        }
+      }
+      (async () => {
+        if (!isBlocked) await addEntryToFavBlockList(entry_id);
+        else await removeEntryFromFavBlockList(entry_id);
+        const newFavBlockedEntries = await userManager.getFavBlockedEntries();
+        favBlockedEntries = newFavBlockedEntries || [];
+        // Re-apply blocking to update UI
+        blockPosts(blockedUsers);
+      })();
     })
     .catch(error => {
       console.error('Error fetching or blocking favlayanlar:', error);
@@ -231,8 +257,7 @@ function addFavlayanlarButton(postContainer, nickname) {
     actionList.appendChild(blockFavlayan);
     const entry_id = postContainer.getAttribute("data-id");
 
-    // Set text based on current blocked status - using global blockedUsers
-    blockFavlayanLink.textContent = FAVLAR_BLOCK_MESSAGE;
+    blockFavlayanLink.textContent = favBlockedEntries.includes(entry_id) ? FAVLAR_UNBLOCK_MESSAGE : FAVLAR_BLOCK_MESSAGE;
 
     blockFavlayan.onclick = (e) => favlarButtonClick(e, entry_id, blockFavlayanLink);
   }
@@ -446,8 +471,10 @@ function injectCSS() {
 injectCSS();
 
 // Get banned users from storage and apply blocking
-browser.storage.local.get('bannedUsers')
+browser.storage.local.get(["bannedUsers", "favBlockedEntries"])
   .then((result) => {
+    blockedUsers = result.bannedUsers || [];
+    favBlockedEntries = result.favBlockedEntries || [];
     blockPosts(result.bannedUsers || []);
   })
   .catch((error) => {
@@ -456,7 +483,14 @@ browser.storage.local.get('bannedUsers')
 
 // Listen for changes to the banned users list
 browser.storage.onChanged.addListener((changes, area) => {
-  if (area === 'local' && changes.bannedUsers) {
-    blockPosts(changes.bannedUsers.newValue);
+  if (area === 'local') {
+    if (changes.bannedUsers) {
+      blockedUsers = changes.bannedUsers.newValue || [];
+      blockPosts(blockedUsers);
+    }
+    if (changes.favBlockedEntries) {
+      favBlockedEntries = changes.favBlockedEntries.newValue || [];
+      blockPosts(blockedUsers);
+    }
   }
 });
