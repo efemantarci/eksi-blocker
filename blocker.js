@@ -2,11 +2,15 @@ let blockedUsers = [];
 
 const BLOCK_MESSAGE = "Kullanıcıyı Engelle";
 const UNBLOCK_MESSAGE = "Engeli Kaldır";
+const FAVLAR_BLOCK_MESSAGE = "Favlayanları Engelle";
+const FAVLAR_UNBLOCK_MESSAGE = "Favlayanları Kaldır";
+const BLOCKER_ID = "eksi-blocker-block-user";
+const BLOCKER_FAVLAR_ID = "eksi-blocker-block-favlayanlar";
 const loggedIn = document.querySelector(".loggedoff") == null;
 
 function blockButtonClick(event, nickname, blockUserLink) {
   event.stopPropagation();
-  
+
   if (blockedUsers.includes(nickname)) {
     // Remove from block list
     userManager.removeUserFromBlockList(nickname)
@@ -32,11 +36,109 @@ function blockButtonClick(event, nickname, blockUserLink) {
   }
 }
 
-function addBlockButton(postContainer, nickname) {
+function parseFavlayanlar(html, accumulatedFavlayanlar = []) {
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(html, 'text/html');
+
+  function getFavlayanlarFromText(text) {
+    return text.replace("/biri/", "");
+  }
+  // Yes there is a typo in the class in eksisozluk. It should have been 'seperated' :D
+  const currentFavlayanlar = Array.from(doc.querySelectorAll('li:not(.separated) > a'))
+    .map(el => getFavlayanlarFromText(el.getAttribute('href')));
+  const allFavlayanlar = [...accumulatedFavlayanlar, ...currentFavlayanlar];
+  const caylakLink = doc.querySelector('li.separated > a');
+  if (caylakLink) {
+    return fetch(`https://eksisozluk.com${caylakLink.getAttribute("href")}`, {
+      credentials: 'include', // We need cookies for validation
+      headers: {
+        'X-Requested-With': 'XMLHttpRequest'
+      }
+    })
+      .then(response => {
+        if (!response.ok) {
+          throw new Error(`HTTP error with status: ${response.status}`);
+        }
+        return response.text();
+      })
+      .then(html => {
+        return parseFavlayanlar(html, allFavlayanlar);
+      })
+      .catch(error => {
+        console.error('Error fetching favlayanlar:', error);
+        return allFavlayanlar;
+      });
+  } else {
+    return Promise.resolve(allFavlayanlar);
+  }
+}
+
+function favlarButtonClick(event, entry_id, blockUserLink) {
+  event.stopPropagation();
+
+  // Show processing status
+  const originalText = blockUserLink.textContent;
+  blockUserLink.textContent = "İşleniyor...";
+
+  fetch(`https://eksisozluk.com/entry/favorileyenler?entryId=${entry_id}`, {
+    credentials: 'include',
+    headers: {
+      'X-Requested-With': 'XMLHttpRequest'
+    }
+  })
+    .then(response => {
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+      return response.text();
+    })
+    .then(html => {
+      return parseFavlayanlar(html);
+    })
+    .then(favlayanlarArray => {
+      return userManager.batchAddUsersToBlockList(favlayanlarArray);
+    })
+    .then(result => {
+      // Get the updated list of blocked users
+      return browser.storage.local.get('bannedUsers').then(storageResult => {
+        return {
+          batchResult: result,
+          storageResult: storageResult
+        };
+      });
+    })
+    .then(({ batchResult, storageResult }) => {
+      // Update global array
+      blockedUsers = storageResult.bannedUsers || [];
+
+      // Show message
+      if (batchResult.addedCount > 0) {
+        blockUserLink.textContent = FAVLAR_UNBLOCK_MESSAGE;
+        console.log(`Başarıyla ${batchResult.addedCount} kullanıcı engellendi`);
+      } else {
+        blockUserLink.textContent = "Tümü Zaten Engelli";
+        setTimeout(() => {
+          blockUserLink.textContent = originalText;
+        }, 2000);
+      }
+      // Re-apply blocking to update UI
+      blockPosts(blockedUsers);
+    })
+    .catch(error => {
+      console.error('Error fetching or blocking favlayanlar:', error);
+      blockUserLink.textContent = "Hata!";
+      setTimeout(() => {
+        blockUserLink.textContent = originalText;
+      }, 2000);
+    });
+}
+
+function addBlockDropdown(postContainer) {
   // Add block button
   const feedbackBlock = postContainer.querySelector(".feedback");
+  let blockButton = null;
   if (!feedbackBlock.querySelector(".block")) {
-    const blockButton = document.createElement("div");
+    blockButton = document.createElement("div");
     blockButton.style.display = "inline-block";
     blockButton.classList.add("block", "dropdown");
     blockButton.onclick = function (e) {
@@ -49,16 +151,9 @@ function addBlockButton(postContainer, nickname) {
 
     const actionList = document.createElement("ul");
     actionList.classList.add("dropdown-menu", "right", "toggles-menu");
-    const blockUser = document.createElement("li");
-    const blockUserLink = document.createElement("a");
-    blockUser.classList.add("share-links");
-    blockUser.appendChild(blockUserLink);
-    actionList.appendChild(blockUser);
-    
-    // Set text based on current blocked status - using global blockedUsers
-    blockUserLink.textContent = blockedUsers.includes(nickname) ? UNBLOCK_MESSAGE : BLOCK_MESSAGE;
 
-    blockUser.onclick = (e) => blockButtonClick(e, nickname, blockUserLink);
+    blockButton.appendChild(actionList);
+    feedbackBlock.appendChild(blockButton);
     blockButton.appendChild(actionList);
     const link = document.createElement("a");
 
@@ -79,7 +174,67 @@ function addBlockButton(postContainer, nickname) {
 
     link.appendChild(svg);
     blockButton.appendChild(link);
-    feedbackBlock.appendChild(blockButton);
+  }
+  else {
+    blockButton = feedbackBlock.querySelector(".block");
+  }
+  return blockButton;
+}
+
+function addBlockButton(postContainer, nickname) {
+  // Add block button
+  const feedbackBlock = postContainer.querySelector(".feedback");
+  let actionList = null;
+  let blockButton = null;
+  if (!feedbackBlock.querySelector(".block")) {
+    blockButton = addBlockDropdown(postContainer);
+    actionList = blockButton.querySelector("ul");
+  }
+  else {
+    actionList = feedbackBlock.querySelector(".block").querySelector("ul");
+    blockButton = feedbackBlock.querySelector(".block");
+  }
+  if (!feedbackBlock.querySelector("#" + BLOCKER_ID)) {
+    const blockUser = document.createElement("li");
+    const blockUserLink = document.createElement("a");
+    blockUser.id = BLOCKER_ID;
+    blockUser.classList.add("share-links");
+    blockUser.appendChild(blockUserLink);
+    actionList.appendChild(blockUser);
+
+    // Set text based on current blocked status - using global blockedUsers
+    blockUserLink.textContent = blockedUsers.includes(nickname) ? UNBLOCK_MESSAGE : BLOCK_MESSAGE;
+
+    blockUser.onclick = (e) => blockButtonClick(e, nickname, blockUserLink);
+  }
+}
+
+function addFavlayanlarButton(postContainer, nickname) {
+  // Add block button
+  const feedbackBlock = postContainer.querySelector(".feedback");
+  let actionList = null;
+  let blockButton = null;
+  if (!feedbackBlock.querySelector(".block")) {
+    blockButton = addBlockDropdown(postContainer);
+    actionList = blockButton.querySelector("ul");
+  }
+  else {
+    actionList = feedbackBlock.querySelector(".block").querySelector("ul");
+    blockButton = feedbackBlock.querySelector(".block");
+  }
+  if (!feedbackBlock.querySelector("#" + BLOCKER_FAVLAR_ID)) {
+    const blockFavlayan = document.createElement("li");
+    const blockFavlayanLink = document.createElement("a");
+    blockFavlayan.id = BLOCKER_FAVLAR_ID;
+    blockFavlayan.classList.add("share-links");
+    blockFavlayan.appendChild(blockFavlayanLink);
+    actionList.appendChild(blockFavlayan);
+    const entry_id = postContainer.getAttribute("data-id");
+
+    // Set text based on current blocked status - using global blockedUsers
+    blockFavlayanLink.textContent = FAVLAR_BLOCK_MESSAGE;
+
+    blockFavlayan.onclick = (e) => favlarButtonClick(e, entry_id, blockFavlayanLink);
   }
 }
 
@@ -87,15 +242,16 @@ function addBlockButton(postContainer, nickname) {
 function blockPosts(bannedUsers) {
   // Update the global variable
   blockedUsers = bannedUsers || [];
-  
+
   // Select all <li> elements with the id "entry-item"
   const listItems = document.querySelectorAll('li#entry-item');
 
   listItems.forEach(item => {
     const nickname = item.getAttribute("data-author");
-    
+
     addBlockButton(item, nickname);
-    
+    if (loggedIn) addFavlayanlarButton(item, nickname);
+
     if (blockedUsers.includes(nickname)) {
       // Add blur class
       item.classList.add('eksi-blocker-blur');
