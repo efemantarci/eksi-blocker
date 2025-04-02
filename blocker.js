@@ -13,7 +13,6 @@ function blockButtonClick(event, nickname, blockUserLink) {
   event.stopPropagation();
 
   if (blockedUsers.includes(nickname)) {
-    // Remove from block list
     userManager.removeUserFromBlockList(nickname)
       .then(removed => {
         if (removed) {
@@ -21,7 +20,6 @@ function blockButtonClick(event, nickname, blockUserLink) {
         }
       });
   } else {
-    // Add to block list
     userManager.addUserToBlockList(nickname)
       .then(added => {
         if (added) {
@@ -29,48 +27,113 @@ function blockButtonClick(event, nickname, blockUserLink) {
         }
       });
   }
-
   // Close the dropdown menu
   const parent = blockUserLink.closest('.dropdown-menu');
   if (parent) {
     parent.classList.remove('open');
   }
 }
+async function handleFavorites(entry_id, blockUserLink, isBlocked, originalText) {
+  try {
+    // Show processing status
+    blockUserLink.textContent = "İşleniyor...";
+    
+    const response = await fetch(`https://eksisozluk.com/entry/favorileyenler?entryId=${entry_id}`, {
+      credentials: 'include',
+      headers: { 'X-Requested-With': 'XMLHttpRequest' }
+    });
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! Status: ${response.status}`);
+    }
+    
+    const html = await response.text();
+    const favlayanlarArray = await parseFavlayanlar(html);
+    
+    // Process the results
+    let batchResult;
+    if (isBlocked) {
+      batchResult = await userManager.batchRemoveUsersFromBlockList(favlayanlarArray);
+    } else {
+      batchResult = await userManager.batchAddUsersToBlockList(favlayanlarArray);
+    }
+    
+    // Get the updated list of blocked users
+    const storageResult = await browser.storage.local.get('bannedUsers');
+    blockedUsers = storageResult.bannedUsers || [];
+    
+    // Update UI based on operation result
+    if (!isBlocked) {
+      if (batchResult.addedCount > 0) {
+        blockUserLink.textContent = FAVLAR_UNBLOCK_MESSAGE;
+        console.log(`Başarıyla ${batchResult.addedCount} kullanıcı engellendi`);
+      } else {
+        blockUserLink.textContent = "Tümü Zaten Engelli";
+        setTimeout(() => {
+          blockUserLink.textContent = originalText;
+        }, 2000);
+      }
+      
+      await addEntryToFavBlockList(entry_id);
+    } else {
+      if (batchResult.removedCount > 0) {
+        blockUserLink.textContent = FAVLAR_BLOCK_MESSAGE;
+        console.log(`Başarıyla ${batchResult.removedCount} kullanıcının engeli kaldırıldı`);
+      } else {
+        blockUserLink.textContent = "Hiçbiri Engelli Değil";
+        setTimeout(() => {
+          blockUserLink.textContent = originalText;
+        }, 2000);
+      }
+      
+      await removeEntryFromFavBlockList(entry_id);
+    }
+    
+    // Update cached entries list and refresh UI
+    const newFavBlockedEntries = await userManager.getFavBlockedEntries();
+    favBlockedEntries = newFavBlockedEntries || [];
+    blockPosts(blockedUsers);
+    
+  } catch (error) {
+    console.error('Error fetching or blocking favlayanlar:', error);
+    blockUserLink.textContent = "Hata!";
+    setTimeout(() => {
+      blockUserLink.textContent = originalText;
+    }, 2000);
+  }
+}
 
-function parseFavlayanlar(html, accumulatedFavlayanlar = []) {
+async function parseFavlayanlar(html, accumulatedFavlayanlar = []) {
   const parser = new DOMParser();
   const doc = parser.parseFromString(html, 'text/html');
-
-  function getFavlayanlarFromText(text) {
-    return text.replace("/biri/", "");
-  }
-  // Yes there is a typo in the class in eksisozluk. It should have been 'seperated' :D
+  
+  const getFavlayanlarFromText = (text) => text.replace("/biri/", "");
+  
   const currentFavlayanlar = Array.from(doc.querySelectorAll('li:not(.separated) > a'))
     .map(el => getFavlayanlarFromText(el.getAttribute('href')));
+    
   const allFavlayanlar = [...accumulatedFavlayanlar, ...currentFavlayanlar];
   const caylakLink = doc.querySelector('li.separated > a');
+  
   if (caylakLink) {
-    return fetch(`https://eksisozluk.com${caylakLink.getAttribute("href")}`, {
-      credentials: 'include', // We need cookies for validation
-      headers: {
-        'X-Requested-With': 'XMLHttpRequest'
-      }
-    })
-      .then(response => {
-        if (!response.ok) {
-          throw new Error(`HTTP error with status: ${response.status}`);
-        }
-        return response.text();
-      })
-      .then(html => {
-        return parseFavlayanlar(html, allFavlayanlar);
-      })
-      .catch(error => {
-        console.error('Error fetching favlayanlar:', error);
-        return allFavlayanlar;
+    try {
+      const response = await fetch(`https://eksisozluk.com${caylakLink.getAttribute("href")}`, {
+        credentials: 'include',
+        headers: { 'X-Requested-With': 'XMLHttpRequest' }
       });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error with status: ${response.status}`);
+      }
+      
+      const nextHtml = await response.text();
+      return await parseFavlayanlar(nextHtml, allFavlayanlar);
+    } catch (error) {
+      console.error('Error fetching favlayanlar:', error);
+      return allFavlayanlar;
+    }
   } else {
-    return Promise.resolve(allFavlayanlar);
+    return allFavlayanlar;
   }
 }
 
@@ -80,83 +143,7 @@ function favlarButtonClick(event, entry_id, blockUserLink) {
   // Show processing status
   const isBlocked = favBlockedEntries.includes(entry_id);
   const originalText = blockUserLink.textContent;
-  blockUserLink.textContent = "İşleniyor...";
-
-  fetch(`https://eksisozluk.com/entry/favorileyenler?entryId=${entry_id}`, {
-    credentials: 'include',
-    headers: {
-      'X-Requested-With': 'XMLHttpRequest'
-    }
-  })
-    .then(response => {
-      if (!response.ok) {
-        throw new Error(`HTTP error! Status: ${response.status}`);
-      }
-      return response.text();
-    })
-    .then(html => {
-      return parseFavlayanlar(html);
-    })
-    .then(favlayanlarArray => {
-      if(isBlocked) {
-        return userManager.batchRemoveUsersFromBlockList(favlayanlarArray);
-      }
-      else{
-        return userManager.batchAddUsersToBlockList(favlayanlarArray);
-      }
-    })
-    .then(result => {
-      // Get the updated list of blocked users
-      return browser.storage.local.get('bannedUsers').then(storageResult => {
-        return {
-          batchResult: result,
-          storageResult: storageResult
-        };
-      });
-    })
-    .then(({ batchResult, storageResult }) => {
-      blockedUsers = storageResult.bannedUsers || [];
-      if(!isBlocked){
-        // Show message
-        if (batchResult.addedCount > 0) {
-          blockUserLink.textContent = FAVLAR_UNBLOCK_MESSAGE;
-          console.log(`Başarıyla ${batchResult.addedCount} kullanıcı engellendi`);
-        } else {  
-          blockUserLink.textContent = "Tümü Zaten Engelli";
-          setTimeout(() => {
-            blockUserLink.textContent = originalText;
-          }, 2000);
-        }
-      }
-      else{
-        if (batchResult.removedCount > 0) {
-          blockUserLink.textContent = FAVLAR_BLOCK_MESSAGE;
-          console.log(`Başarıyla ${batchResult.removedCount} kullanıcının engeli kaldırıldı`);
-        } else {
-          blockUserLink.textContent = "Hiçbiri Engelli Değil";
-          console.log(batchResult);
-          console.log(storageResult);
-          setTimeout(() => {
-            blockUserLink.textContent = originalText;
-          }, 2000);
-        }
-      }
-      (async () => {
-        if (!isBlocked) await addEntryToFavBlockList(entry_id);
-        else await removeEntryFromFavBlockList(entry_id);
-        const newFavBlockedEntries = await userManager.getFavBlockedEntries();
-        favBlockedEntries = newFavBlockedEntries || [];
-        // Re-apply blocking to update UI
-        blockPosts(blockedUsers);
-      })();
-    })
-    .catch(error => {
-      console.error('Error fetching or blocking favlayanlar:', error);
-      blockUserLink.textContent = "Hata!";
-      setTimeout(() => {
-        blockUserLink.textContent = originalText;
-      }, 2000);
-    });
+  handleFavorites(entry_id, blockUserLink, isBlocked, originalText)
 }
 
 function addBlockDropdown(postContainer) {
