@@ -27,6 +27,11 @@ function displayBannedUsers(bannedUsers) {
     
     list.appendChild(listItem);
   });
+
+  const header = document.getElementById('block-header');
+  if (bannedUsers.length > 0) {
+    header.textContent = `Engellenen Kullanıcılar (${bannedUsers.length})`;	
+  }
 }
 
 // Function to add a user to the banned list
