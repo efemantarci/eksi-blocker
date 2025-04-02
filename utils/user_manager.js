@@ -1,15 +1,23 @@
 // User management utility functions for the blocker extension
 
-// Get the current list of banned users
-async function getBannedUsers() {
+async function getFromStoredList(listName) {
   try {
-    const result = await browser.storage.local.get('bannedUsers');
-    return result.bannedUsers || [];
+    const result = await browser.storage.local.get(listName);
+    return result[listName] || [];
   } catch (error) {
-    console.error('Error loading banned users:', error);
+    console.error(`Error loading ${listName}:`, error);
     return [];
   }
 }
+
+async function getBannedUsers() {
+  return getFromStoredList('bannedUsers');
+}
+
+async function getFavBlockedEntries() {
+  return getFromStoredList('favBlockedEntries');
+}
+
 
 // Add a user to the banned list
 async function addUserToBlockList(username) {
@@ -33,17 +41,6 @@ async function addUserToBlockList(username) {
   } catch (error) {
     console.error('Error adding user to block list:', error);
     return false;
-  }
-}
-
-// Get the current list of banned users
-async function getFavBlockedEntries() {
-  try {
-    const result = await browser.storage.local.get('favBlockedEntries');
-    return result.favBlockedEntries || [];
-  } catch (error) {
-    console.error('Error loading fav blocked entries:', error);
-    return [];
   }
 }
 

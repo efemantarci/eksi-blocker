@@ -207,60 +207,58 @@ function addBlockDropdown(postContainer) {
   return blockButton;
 }
 
-function addBlockButton(postContainer, nickname) {
-  // Add block button
+// This would replace both addBlockButton and addFavlayanlarButton functions
+function createBlockButton(postContainer, nickname, buttonType) {
+  
   const feedbackBlock = postContainer.querySelector(".feedback");
+  
+  // Get or create the dropdown container
+  let blockButton = feedbackBlock.querySelector(".block");
   let actionList = null;
-  let blockButton = null;
-  if (!feedbackBlock.querySelector(".block")) {
-    blockButton = addBlockDropdown(postContainer);
-    actionList = blockButton.querySelector("ul");
-  }
-  else {
-    actionList = feedbackBlock.querySelector(".block").querySelector("ul");
+  
+  if (!blockButton) {
+    addBlockDropdown(postContainer);
     blockButton = feedbackBlock.querySelector(".block");
   }
-  if (!feedbackBlock.querySelector("#" + BLOCKER_ID)) {
+  actionList = blockButton.querySelector("ul");
+  
+  // Create the appropriate button based on type
+  if (buttonType === 'user' && !feedbackBlock.querySelector("#" + BLOCKER_ID)) {
     const blockUser = document.createElement("li");
     const blockUserLink = document.createElement("a");
     blockUser.id = BLOCKER_ID;
     blockUser.classList.add("share-links");
+    
+    // Set text based on current blocked status
+    blockUserLink.textContent = blockedUsers.includes(nickname) ? UNBLOCK_MESSAGE : BLOCK_MESSAGE;
+    
     blockUser.appendChild(blockUserLink);
     actionList.appendChild(blockUser);
-
-    // Set text based on current blocked status - using global blockedUsers
-    blockUserLink.textContent = blockedUsers.includes(nickname) ? UNBLOCK_MESSAGE : BLOCK_MESSAGE;
-
     blockUser.onclick = (e) => blockButtonClick(e, nickname, blockUserLink);
-  }
-}
-
-function addFavlayanlarButton(postContainer, nickname) {
-  // Add block button
-  const feedbackBlock = postContainer.querySelector(".feedback");
-  let actionList = null;
-  let blockButton = null;
-  if (!feedbackBlock.querySelector(".block")) {
-    blockButton = addBlockDropdown(postContainer);
-    actionList = blockButton.querySelector("ul");
-  }
-  else {
-    actionList = feedbackBlock.querySelector(".block").querySelector("ul");
-    blockButton = feedbackBlock.querySelector(".block");
-  }
-  if (!feedbackBlock.querySelector("#" + BLOCKER_FAVLAR_ID)) {
+    
+    return blockUserLink;
+  } 
+  else if (buttonType === 'favlayanlar' && !feedbackBlock.querySelector("#" + BLOCKER_FAVLAR_ID)) {
     const blockFavlayan = document.createElement("li");
     const blockFavlayanLink = document.createElement("a");
     blockFavlayan.id = BLOCKER_FAVLAR_ID;
     blockFavlayan.classList.add("share-links");
+    
+    const entry_id = postContainer.getAttribute("data-id");
+    blockFavlayanLink.textContent = favBlockedEntries.includes(entry_id) ? 
+      FAVLAR_UNBLOCK_MESSAGE : FAVLAR_BLOCK_MESSAGE;
+    
     blockFavlayan.appendChild(blockFavlayanLink);
     actionList.appendChild(blockFavlayan);
-    const entry_id = postContainer.getAttribute("data-id");
-
-    blockFavlayanLink.textContent = favBlockedEntries.includes(entry_id) ? FAVLAR_UNBLOCK_MESSAGE : FAVLAR_BLOCK_MESSAGE;
-
     blockFavlayan.onclick = (e) => favlarButtonClick(e, entry_id, blockFavlayanLink);
+    
+    return blockFavlayanLink;
   }
+  
+  // Return existing button if already present
+  return buttonType === 'user' ? 
+    feedbackBlock.querySelector("#" + BLOCKER_ID + " a") : 
+    feedbackBlock.querySelector("#" + BLOCKER_FAVLAR_ID + " a");
 }
 
 // Function to block posts from banned users
@@ -274,8 +272,8 @@ function blockPosts(bannedUsers) {
   listItems.forEach(item => {
     const nickname = item.getAttribute("data-author");
 
-    addBlockButton(item, nickname);
-    if (loggedIn) addFavlayanlarButton(item, nickname);
+    createBlockButton(item, nickname, "user");
+    if (loggedIn) createBlockButton(item, nickname, "favlayanlar");
 
     if (blockedUsers.includes(nickname)) {
       // Add blur class
