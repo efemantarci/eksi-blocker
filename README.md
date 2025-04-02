@@ -10,16 +10,27 @@ eksisozluk.com'da üyelik açmaya gerek kalmadan kullanıcı engelleyebildiğini
 
 ## Kullanım
 
+### Yöntem 1: Popup ile Engelleme
+
 1. Araç çubuğundaki eklenti simgesine tıklayın  
 2. Engellemek istediğiniz bir kullanıcı adını girin  
 3. "Ekle" butonuna tıklayın veya Enter tuşuna basın  
 4. Bir kullanıcıyı engellemekten çıkarmak için, adının yanındaki "Kaldır" butonuna tıklayın  
-5. eksisozluk.com'da gezinirken, engellenen kullanıcıların gönderileri bulanıklaştırılacaktır  
-6. Bulanık içeriği geçici olarak görüntülemek için "Göster" butonuna tıklayın  
-7. Tekrar bulanıklaştırmak için "Gizle" butonuna tıklayın  
+
+### Yöntem 2: Entry Üzerinden Engelleme
+
+1. Sözlükte herhangi bir entry'deki engelle butonunu kullanın
+2. Kullanıcı anında engellenir ve listede görünür
+3. Engeli kaldırmak için popup menüden kullanıcının yanındaki "Kaldır" butonunu kullanabilirsiniz
 
 ## Resimler
 
 ![Popup Ekranı](docs/images/popup.jpg)
 
 ![Engel Sonrası](docs/images/engel.jpg)
+
+## Gelecek Geliştirmeler
+
+- [ ] Entry'i favlayanları toplu engelleme özelliği
+- [ ] Belirli bir kullanıcıyı takip edenleri toplu engelleme özelliği
+- [ ] Chrome tarayıcı desteği
