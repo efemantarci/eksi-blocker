@@ -7,6 +7,7 @@ eksisozluk.com'da üyelik açmaya gerek kalmadan kullanıcı engelleyebildiğini
 - Belirli kullanıcıların göndelerini bulanıklaştırma ve isteğe göre görüntüleme
 - Kolayca kullanıcı eklenip kaldırılabilen arayüz
 - Birden fazla kullanıcının eklenebildiği JSON yükleme desteği
+- Bir entry'yi favlayanları engelleme (Ekşi Sözlük'e giriş yapılması gerekir)
 
 ## Kullanım
 
@@ -31,6 +32,6 @@ eksisozluk.com'da üyelik açmaya gerek kalmadan kullanıcı engelleyebildiğini
 
 ## Gelecek Geliştirmeler
 
-- [ ] Entry'yi favlayanları toplu engelleme özelliği
+- [X] Entry'yi favlayanları toplu engelleme özelliği
 - [ ] Belirli bir kullanıcıyı takip edenleri toplu engelleme özelliği
 - [ ] Chrome tarayıcı desteği
