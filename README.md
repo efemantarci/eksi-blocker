@@ -31,6 +31,6 @@ eksisozluk.com'da üyelik açmaya gerek kalmadan kullanıcı engelleyebildiğini
 
 ## Gelecek Geliştirmeler
 
-- [ ] Entry'i favlayanları toplu engelleme özelliği
+- [ ] Entry'yi favlayanları toplu engelleme özelliği
 - [ ] Belirli bir kullanıcıyı takip edenleri toplu engelleme özelliği
 - [ ] Chrome tarayıcı desteği
